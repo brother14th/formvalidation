@@ -10,6 +10,7 @@ using Newtonsoft.Json;
 using UserApp.Api.Entities;
 using UserApp.Api.Validators;
 using System.Linq;
+using System.Collections.Generic;
 
 namespace UserApp.Api
 {
@@ -25,11 +26,7 @@ namespace UserApp.Api
                 var validator = new UserFormValidator();
                 var json = await req.ReadAsStringAsync();
                 var form = JsonConvert.DeserializeObject<UserForm>(json);
-                if (form == null)
-                    return new BadRequestObjectResult(new { message = "No data is submitted!" });
-
                 var validationResult = validator.Validate(form);
-                
                 if (!validationResult.IsValid)
                 {
                     var messages = validationResult.Errors.Select(e => new ApiValidationResultDetail()
@@ -45,7 +42,8 @@ namespace UserApp.Api
             catch (Exception ex)
             {
                 log.LogError(ex,"Validate user form data");
-                return new StatusCodeResult(StatusCodes.Status500InternalServerError);
+                var messages = new List<ApiValidationResultDetail> { new ApiValidationResultDetail { Field = "NA", Error = "Error validating data!" } };
+                return new BadRequestObjectResult(new ApiValidationResult { Type = "Error", Messages = messages });
             }
         }
         
